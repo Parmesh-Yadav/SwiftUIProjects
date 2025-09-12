@@ -38,10 +38,10 @@ class Expenses {
 
 struct ContentView: View {
     @State private var expenses = Expenses()
-    @State private var showAddExpense = false
+    @State private var path = NavigationPath()
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path){
             List {
                 ForEach(expenses.items) { item in
                     HStack {
@@ -59,12 +59,16 @@ struct ContentView: View {
             }
             .navigationTitle("iExpense")
             .toolbar {
-                Button("Add Expense", systemImage: "plus") {
-                    showAddExpense = true
+                Button{
+                    path.append("Add View")
+                } label : {
+                    Image(systemName: "plus")
                 }
             }
-            .sheet(isPresented: $showAddExpense) {
-                AddView(expenses: expenses)
+            .navigationDestination(for: String.self) { value in
+                if value == "Add View" {
+                    AddView(expenses: expenses)
+                }
             }
         }
     }

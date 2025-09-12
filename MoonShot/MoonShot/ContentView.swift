@@ -24,9 +24,7 @@ struct ContentView: View {
                     ScrollView {
                         LazyVGrid(columns: columns) {
                             ForEach(missions) { mission in
-                                NavigationLink {
-                                    MissionView(mission: mission, astronauts: astronauts)
-                                } label : {
+                                NavigationLink(value: mission) {
                                     VStack {
                                         Image(mission.image)
                                             .resizable()
@@ -52,6 +50,7 @@ struct ContentView: View {
                                             .stroke(.lightBackground)
                                     )
                                 }
+                                
                             }
                         }
                         .padding([.horizontal, .bottom])
@@ -59,9 +58,7 @@ struct ContentView: View {
                 }
                 else {
                     List(missions) { mission in
-                        NavigationLink {
-                            MissionView(mission: mission, astronauts: astronauts)
-                        } label: {
+                        NavigationLink(value: mission) {
                             HStack{
                                 Image(mission.image)
                                     .resizable()
@@ -100,6 +97,12 @@ struct ContentView: View {
                         Image(systemName: showGrid ? "list.bullet" : "square.grid.2x2")
                     }
                 }
+            }
+            .navigationDestination(for: Mission.self) { mission in
+                MissionView(mission: mission, astronauts: astronauts)
+            }
+            .navigationDestination(for: Astronaut.self) { astronaut in
+                AstronautView(astronaut: astronaut)
             }
         }
     }
