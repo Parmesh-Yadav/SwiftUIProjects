@@ -27,10 +27,10 @@ struct AddressView: View {
                     CheckoutView(order: order)
                 }
             }
-            .disabled(order.hasValidAddress == false)
-            .navigationTitle("Delivery Details")
-            .navigationBarTitleDisplayMode(.inline)
+            .disabled(!order.hasValidAddress)
         }
+        .navigationTitle("Delivery Details")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
