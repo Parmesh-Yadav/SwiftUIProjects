@@ -50,11 +50,16 @@ struct AddBookView: View {
             .navigationTitle("Add Book")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel", systemImage: "xmark") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title)
+                            .foregroundStyle(.red)
                     }
-                    .tint(.red)
+                    .buttonStyle(.borderless)
                 }
+                .sharedBackgroundVisibility(.hidden)
             }
         }
     }
