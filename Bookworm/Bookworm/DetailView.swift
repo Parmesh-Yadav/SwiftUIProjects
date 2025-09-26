@@ -9,10 +9,15 @@ import SwiftUI
 import SwiftData
 
 struct DetailView: View {
-    let book: Book
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
+    
     @State private var showDeleteAlert = false
+    
+    let book: Book
+    private var displayedTitle: String { book.title.isEmpty ? "unknown title" : book.title}
+    private var displayedAuthor: String { book.author.isEmpty ? "unknown author" : book.author}
+    private var displayedGenre: String { book.genre.isEmpty ? "unknown genre" : book.genre}
     
     var body: some View {
         ScrollView {
@@ -21,7 +26,7 @@ struct DetailView: View {
                     .resizable()
                     .scaledToFit()
                 
-                Text(book.genre.uppercased())
+                Text(displayedGenre.uppercased())
                     .fontWeight(.black)
                     .padding(8)
                     .foregroundStyle(.white)
@@ -30,9 +35,14 @@ struct DetailView: View {
                     .offset(x: -5, y: -5)
             }
             
-            Text(book.author)
+            Text(displayedAuthor)
                 .font(.title)
                 .foregroundStyle(.secondary)
+            
+            Text(book.date, format: .dateTime.day().month().year().hour().minute())
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 4)
             
             Text(book.review)
                 .padding()
@@ -40,7 +50,7 @@ struct DetailView: View {
             RatingView(rating: .constant(book.rating))
                 .font(.largeTitle)
         }
-        .navigationTitle(book.title)
+        .navigationTitle(displayedTitle)
         .navigationBarTitleDisplayMode(.inline)
         .scrollBounceBehavior(.basedOnSize)
         .alert("Delete Book", isPresented: $showDeleteAlert) {
@@ -55,6 +65,12 @@ struct DetailView: View {
                 showDeleteAlert = true
             }
         }
+    }
+    
+    func genreImage(for genre: String) -> Image {
+        let knownGenres = ["Fantasy", "Romance", "Mystery", "Science Fiction", "Horror"]
+        if knownGenres.contains(genre) { return Image(genre)}
+        else { return Image(systemName: "book.closed")}
     }
     
     func deleteBook() {

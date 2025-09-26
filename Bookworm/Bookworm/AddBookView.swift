@@ -11,12 +11,20 @@ import SwiftData
 struct AddBookView: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
+    
     @State private var title = ""
     @State private var author = ""
     @State private var rating = 3
-    @State private var genre = ""
+    @State private var genre = Self.genres.first ?? ""
     @State private var review = ""
-    let genres = ["Fantasy", "Romance", "Mystery", "Science Fiction", "Horror"]
+    
+    static let genres = ["Fantasy", "Romance", "Mystery", "Science Fiction", "Horror"]
+    
+    private var isFormValid: Bool {
+        let t = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let a = author.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !t.isEmpty && !a.isEmpty && !genre.isEmpty
+    }
     
     var body: some View {
         NavigationStack {
@@ -27,7 +35,7 @@ struct AddBookView: View {
                     TextField("Author's Name", text: $author)
                     
                     Picker("Genre", selection: $genre) {
-                        ForEach(genres, id: \.self) { genre in
+                        ForEach(AddBookView.genres, id: \.self) { genre in
                             Text(genre)
                         }
                     }
@@ -41,10 +49,15 @@ struct AddBookView: View {
                 
                 Section {
                     Button("Save") {
-                        let newBook = Book(title: title, author: author, genre: genre, review: review, rating: rating)
+                        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let cleanAuthor = author.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let cleanReview = review.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let newBook = Book(title: cleanTitle, author: cleanAuthor, genre: genre, review: cleanReview, rating: rating)
                         modelContext.insert(newBook)
                         dismiss()
                     }
+                    .disabled(!isFormValid)
+                    .opacity(isFormValid ? 1.0 : 0.6)
                 }
             }
             .navigationTitle("Add Book")
