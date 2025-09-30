@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AddView: View {
     @State private var name = "name of expense"
@@ -14,8 +15,7 @@ struct AddView: View {
     @State private var currency = "INR"
     
     @Environment(\.dismiss) var dismiss
-    
-    var expenses: Expenses
+    @Environment(\.modelContext) var modelContext
     
     let types = ["Businness", "Personal"]
     let currencies = ["INR", "USD", "EUR"]
@@ -46,7 +46,7 @@ struct AddView: View {
             .toolbar {
                 Button("Save") {
                     let item = ExpenseItem(name: name, type: type, amount: amount, currency: currency)
-                    expenses.items.append(item)
+                    modelContext.insert(item)
                     dismiss()
                 }
             }
@@ -54,5 +54,5 @@ struct AddView: View {
 }
 
 #Preview {
-    AddView(expenses: Expenses())
+    AddView()
 }

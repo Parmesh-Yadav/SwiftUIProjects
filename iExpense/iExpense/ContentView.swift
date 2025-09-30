@@ -6,44 +6,57 @@
 //
 
 import SwiftUI
+import SwiftData
 
-struct ExpenseItem: Identifiable, Codable {
-    var id = UUID()
-    let name: String
-    let type: String
-    let amount: Double
-    let currency: String
+enum SortType: String, CaseIterable, Identifiable {
+    case name = "Name"
+    case amount = "Amount"
+    var id: String{ rawValue }
 }
 
-@Observable
-class Expenses {
-    var items = [ExpenseItem]() {
-        didSet {
-            if let encoded = try? JSONEncoder().encode(items) {
-                UserDefaults.standard.set(encoded, forKey: "items")
-            }
-        }
-    }
-    
-    init() {
-        if let savedItems = UserDefaults.standard.data(forKey: "items") {
-            if let decodedItems = try? JSONDecoder().decode([ExpenseItem].self, from: savedItems) {
-                items = decodedItems
-                return
-            }
-        }
-        items = []
-    }
+enum FilterType: String, CaseIterable, Identifiable {
+    case all = "All"
+    case personal = "Personal"
+    case business = "Business"
+    var id: String{ rawValue }
 }
 
 struct ContentView: View {
-    @State private var expenses = Expenses()
+    @Environment(\.modelContext) var modelContext
+    @Query var items: [ExpenseItem]
     @State private var path = NavigationPath()
+    @State private var sortType: SortType
+    @State private var filterType: FilterType
+    
+    init(sortType: SortType = .name, filterType: FilterType = .all) {
+        _sortType = State(initialValue: sortType)
+        _filterType = State(initialValue: filterType)
+        
+        let predicate: Predicate<ExpenseItem>?
+        switch filterType {
+        case .all:
+            predicate = nil
+        case .personal:
+            predicate = #Predicate {$0.type == "Personal"}
+        case .business:
+            predicate = #Predicate {$0.type == "Business"}
+        }
+        
+        let sort: [SortDescriptor<ExpenseItem>]
+        switch sortType {
+        case .amount:
+            sort = [SortDescriptor(\.amount, order: .forward)]
+        case .name:
+            sort = [SortDescriptor(\.name, order: .forward)]
+        }
+        
+        _items = Query(filter: predicate, sort: sort)
+    }
     
     var body: some View {
         NavigationStack(path: $path){
             List {
-                ForEach(expenses.items) { item in
+                ForEach(items) { item in
                     HStack {
                         VStack(alignment: .leading){
                             Text(item.name)
@@ -59,22 +72,53 @@ struct ContentView: View {
             }
             .navigationTitle("iExpense")
             .toolbar {
-                Button{
-                    path.append("Add View")
-                } label : {
-                    Image(systemName: "plus")
+                ToolbarItem {
+                    Button{
+                        path.append("Add View")
+                    } label : {
+                        Image(systemName: "plus")
+                    }
+                }
+                
+                ToolbarItem {
+                    Menu {
+                        Picker("Sort by", selection: $sortType) {
+                            ForEach(SortType.allCases){ sort in
+                                Text(sort.rawValue)
+                                    .tag(sort)
+                            }
+                        }
+                    } label: {
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
+                    }
+                }
+                
+                ToolbarItem {
+                    Menu {
+                        Picker("Filter", selection: $filterType) {
+                            ForEach(FilterType.allCases) { filter in
+                                Text(filter.rawValue)
+                                    .tag(filter)
+                            }
+                        }
+                    } label: {
+                        Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    }
                 }
             }
             .navigationDestination(for: String.self) { value in
                 if value == "Add View" {
-                    AddView(expenses: expenses)
+                    AddView()
                 }
             }
         }
     }
     
     func removeItems(at offsets: IndexSet) {
-        expenses.items.remove(atOffsets: offsets)
+        for index in offsets {
+            let item = items[index]
+            modelContext.delete(item)
+        }
     }
 }
 
