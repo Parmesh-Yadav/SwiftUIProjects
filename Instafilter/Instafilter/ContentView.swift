@@ -8,24 +8,20 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var showingConfirmation = false
-    @State private var backgroundColor = Color.white
     
     var body: some View {
-        Button("Hello world!") {
-            showingConfirmation.toggle()
-        }
-        .frame(width: 300, height: 300)
-        .background(backgroundColor)
-        .confirmationDialog("Change background", isPresented: $showingConfirmation) {
-            Button("Red") { backgroundColor = .red }
-            Button("Green") { backgroundColor = .green }
-            Button("Blue") { backgroundColor = .blue }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Select a new color.")
+        ContentUnavailableView {
+            Label("No snippets", systemImage: "swift")
+        } description: {
+            Text("You don't have any save snippets yet. Click the button below to create one.")
+        } actions: {
+            Button("Create a snippet") {
+                //logic to create snippet
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
+
 }
 
 #Preview {
