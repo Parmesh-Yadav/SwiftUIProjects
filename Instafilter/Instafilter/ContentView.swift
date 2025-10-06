@@ -6,19 +6,14 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct ContentView: View {
+    @Environment(\.requestReview) var requestReview
     
     var body: some View {
-        ContentUnavailableView {
-            Label("No snippets", systemImage: "swift")
-        } description: {
-            Text("You don't have any save snippets yet. Click the button below to create one.")
-        } actions: {
-            Button("Create a snippet") {
-                //logic to create snippet
-            }
-            .buttonStyle(.borderedProminent)
+        Button("Leave a review") {
+            requestReview()
         }
     }
 
