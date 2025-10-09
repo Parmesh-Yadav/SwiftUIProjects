@@ -14,6 +14,8 @@ import StoreKit
 struct ContentView: View {
     @State private var processedImage: Image?
     @State private var filterIntensity = 0.5
+    @State private var filterRadius = 50.0
+    @State private var filterScale = 5.0
     @State private var selectedItem: PhotosPickerItem?
     @State private var currentFilter: CIFilter = CIFilter.sepiaTone()
     @State private var showingFilters = false
@@ -47,10 +49,28 @@ struct ContentView: View {
                     
                     Slider(value: $filterIntensity)
                         .onChange(of: filterIntensity, applyProcessing)
+                        .disabled(selectedItem == nil)
+                }
+                
+                HStack {
+                    Text("Radius")
+                    
+                    Slider(value: $filterRadius)
+                        .onChange(of: filterRadius, applyProcessing)
+                        .disabled(selectedItem == nil)
+                }
+                
+                HStack {
+                    Text("Scale")
+                    
+                    Slider(value: $filterScale)
+                        .onChange(of: filterScale, applyProcessing)
+                        .disabled(selectedItem == nil)
                 }
                 
                 HStack {
                     Button("Change Filter", action: changeFilter)
+                        .disabled(selectedItem == nil)
                     
                     Spacer()
                     
@@ -69,6 +89,9 @@ struct ContentView: View {
                 Button("Sepia Tone") { setFilter(CIFilter.sepiaTone())}
                 Button("Unsharp Mask") { setFilter(CIFilter.unsharpMask())}
                 Button("Vignette") { setFilter(CIFilter.vignette())}
+                Button("Bloom") { setFilter(CIFilter.bloom()) }
+                Button("Comic Effect") { setFilter(CIFilter.comicEffect()) }
+                Button("Photo Effect Noir") { setFilter(CIFilter.photoEffectNoir()) }
                 Button("Cancel", role: .cancel) {}
             }
         }
@@ -94,10 +117,10 @@ struct ContentView: View {
             currentFilter.setValue(filterIntensity, forKey: kCIInputIntensityKey)
         }
         if inputKeys.contains(kCIInputRadiusKey) {
-            currentFilter.setValue(filterIntensity * 200, forKey: kCIInputRadiusKey)
+            currentFilter.setValue(filterRadius, forKey: kCIInputRadiusKey)
         }
         if inputKeys.contains(kCIInputScaleKey) {
-            currentFilter.setValue(filterIntensity * 10, forKey: kCIInputScaleKey)
+            currentFilter.setValue(filterScale, forKey: kCIInputScaleKey)
         }
         guard let outputImage = currentFilter.outputImage else { return }
         guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else { return }
