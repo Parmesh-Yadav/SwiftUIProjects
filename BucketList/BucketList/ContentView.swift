@@ -10,6 +10,7 @@ import MapKit
 
 struct ContentView: View {
     @State private var viewModel = ViewModel()
+    @State private var usingHybrid = false
     
     let startPosition = MapCameraPosition.region(
         MKCoordinateRegion(
@@ -19,41 +20,71 @@ struct ContentView: View {
     )
     
     var body: some View {
-        if viewModel.isUnlocked {
-            MapReader{ proxy in
-                Map(initialPosition: startPosition) {
-                    ForEach(viewModel.locations) { location in
-                        Annotation(location.name, coordinate: location.coordinate) {
-                            Image(systemName: "star.cirlce")
-                                .resizable()
-                                .foregroundStyle(.red)
-                                .frame(width: 44, height: 44)
-                                .background(.white)
-                                .clipShape(.circle)
-                                .onLongPressGesture {
-                                    viewModel.selectedLocation = location
-                                }
+        NavigationStack{
+            if viewModel.isUnlocked {
+                MapReader { proxy in
+                    Map(initialPosition: startPosition) {
+                        ForEach(viewModel.locations) { location in
+                            Annotation(location.name, coordinate: location.coordinate) {
+                                Image(systemName: "star.circle")
+                                    .resizable()
+                                    .foregroundStyle(.red)
+                                    .frame(width: 44, height: 44)
+                                    .background(.white)
+                                    .clipShape(Circle())
+                                    .onLongPressGesture {
+                                        viewModel.selectedLocation = location
+                                    }
+                            }
+                        }
+                    }
+                    .mapStyle(usingHybrid ? .hybrid : .standard)
+                    .onTapGesture { position in
+                        if let coordinate = proxy.convert(position, from: .local) {
+                            viewModel.addLocation(at: coordinate)
+                        }
+                    }
+                    .sheet(item: $viewModel.selectedLocation) { place in
+                        EditView(location: place) {
+                            viewModel.update(location: $0)
                         }
                     }
                 }
-                .onTapGesture { position in
-                    if let coordinate = proxy.convert(position, from: .local) {
-                        viewModel.addLocation(at: coordinate)
+                .navigationTitle("Maps")
+                .toolbar {
+                    ToolbarItem {
+                        Button("Switch map style") {
+                            usingHybrid.toggle()
+                        }
                     }
                 }
-                .sheet(item: $viewModel.selectedLocation) { place in
-                    EditView(location: place) {
-                        viewModel.update(location: $0)
-                    }
-                }
+            } else {
+                Button("Unlock places", action: viewModel.authenticate)
+                    .padding()
+                    .background(.blue)
+                    .foregroundStyle(.white)
+                    .clipShape(.capsule)
             }
-        } else {
-            Button("Unlock places", action: viewModel.authenticate)
-                .padding()
-                .background(.blue)
-                .foregroundStyle(.white)
-                .clipShape(.capsule)
         }
+        .alert(
+            "Authentication Error",
+            isPresented: Binding(
+                get: { viewModel.alertMessage != nil },
+                set: { newValue in
+                    if newValue == false {
+                        viewModel.alertMessage = nil
+                    }
+                }
+            ),
+            actions: {
+                Button("OK") {
+                    viewModel.alertMessage = nil
+                }
+            },
+            message: {
+                Text(viewModel.alertMessage ?? "")
+            }
+        )
     }
     
 }

@@ -15,7 +15,8 @@ extension ContentView{
     class ViewModel {
         private(set) var locations: [Location]
         var selectedLocation: Location?
-        var isUnlocked = false
+        var isUnlocked = true
+        var alertMessage: String? = nil
         
         let savePath = URL.documentsDirectory.appending(path: "SavedPlace")
         
@@ -57,14 +58,18 @@ extension ContentView{
             if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
                 let reason = "Please authenticate yourself to unlock your places."
                 context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authencationError in
-                    if success {
-                        self.isUnlocked = true
-                    } else {
-                        // error
+                    DispatchQueue.main.async {
+                        if success {
+                            self.isUnlocked = true
+                        } else {
+                            self.alertMessage = authencationError?.localizedDescription ?? "Authentication failed."
+                        }
                     }
                 }
             } else {
-                // no biometrics
+                DispatchQueue.main.async {
+                    self.alertMessage = "Biometric authentication not available."
+                }
             }
         }
     }
