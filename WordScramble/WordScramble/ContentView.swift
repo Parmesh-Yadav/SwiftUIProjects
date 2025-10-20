@@ -33,6 +33,9 @@ struct ContentView: View {
                                 
                             Text(word)
                         }
+                        .accessibilityElement()
+                        .accessibilityLabel("\(word)")
+                        .accessibilityHint("\(word.count) letters")
                     }
                 }
                 Section {
@@ -42,11 +45,6 @@ struct ContentView: View {
             }
             .navigationTitle(rootWord)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action:startGame) {
-                        Label("Restart", systemImage: "arrow.clockwise")
-                    }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action:startGame) {
                         Label("Restart", systemImage: "arrow.clockwise")

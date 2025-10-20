@@ -15,6 +15,20 @@ struct ContentView: View {
     @State private var selectedFlag: Int? = nil
     @State private var rotationAmount = 0.0
     
+    let labels = [
+        "Estonia": "Flag with three horizontal stripes. Top stripe blue, middle stripe black, bottom stripe white.",
+        "France": "Flag with three vertical stripes. Left stripe blue, middle stripe white, right stripe red.",
+        "Germany": "Flag with three horizontal stripes. Top stripe black, middle stripe red, bottom stripe gold.",
+        "Ireland": "Flag with three vertical stripes. Left stripe green, middle stripe white, right stripe orange.",
+        "Italy": "Flag with three vertical stripes. Left stripe green, middle stripe white, right stripe red.",
+        "Nigeria": "Flag with three vertical stripes. Left and right stripes green, middle stripe white.",
+        "Poland": "Flag with two horizontal stripes. Top stripe white, bottom stripe red.",
+        "Spain": "Flag with three horizontal stripes. Top and bottom stripes red, wider middle stripe yellow with coat of arms.",
+        "UK": "Flag with overlapping red and white crosses on a blue background (Union Jack).",
+        "Ukraine": "Flag with two horizontal stripes. Top stripe blue, bottom stripe yellow.",
+        "US": "Flag with 13 horizontal stripes alternating red and white, and a blue rectangle with white stars in the top left corner."
+    ]
+    
     func resetGame() {
         score = 0
         question = 1
@@ -89,6 +103,7 @@ struct ContentView: View {
                                 .opacity(selectedFlag == nil || selectedFlag == number ? 1.0 : 0.25)
                                 .scaleEffect(selectedFlag == nil || selectedFlag == number ? 1.0 : 0.7)
                         }
+                        .accessibilityLabel(labels[countries[number], default: "Unkown Flag"])
                     }
                 }
                 .frame(maxWidth: .infinity)
