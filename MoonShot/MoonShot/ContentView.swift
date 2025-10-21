@@ -78,6 +78,9 @@ struct ContentView: View {
                             }
                             .padding(.vertical,4)
                             .frame(maxWidth: .infinity)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel("\(mission.displayName), launched \(mission.formattedLaunchDate)")
+                            .accessibilityHint("Double-tap for more mission details")
                         }
                     }
                     .listStyle(.plain)

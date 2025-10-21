@@ -21,30 +21,38 @@ struct MissionView: View {
                     .containerRelativeFrame(.horizontal) { width, axis in
                         width * 0.6
                     }
+                    .accessibilityLabel("\(mission.displayName) mission image")
                 
                 Text(mission.formattedLaunchDate)
                     .font(.title3)
                     .foregroundStyle(.secondary)
                     .padding(.top, 5)
+                    .accessibilityLabel("Launch date: \(mission.formattedLaunchDate)")
                 
                 VStack(alignment: .leading) {
                     RectangleDividersView()
+                        .accessibilityHidden(true)
                     
                     Text("Mission Highlights")
                         .font(.title.bold())
                         .padding(.bottom,5)
                     
                     Text(mission.description)
+                        .accessibilityLabel("Mission highlights: \(mission.description)")
                     
                     RectangleDividersView()
+                        .accessibilityHidden(true)
                     
                     Text("Crew")
                         .font(.title.bold())
                         .padding(.bottom,5)
                 }
                 .padding(.horizontal)
+                .accessibilityElement(children: .combine)
                 
                 AstronautsHorizontalScrollView(crew: crew)
+                    .accessibilityLabel("Crew Members")
+                    .accessibilityHint("Swipe left to explore astronauts part of this mission.")
             }
             .padding(.bottom)
         }

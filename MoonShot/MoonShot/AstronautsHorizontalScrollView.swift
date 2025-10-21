@@ -35,6 +35,9 @@ struct AstronautsHorizontalScrollView: View {
                             }
                         }
                         .padding(.horizontal)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(crewMember.astronaut.name), \(crewMember.role)")
+                        .accessibilityHint("Double-tap for more details about \(crewMember.astronaut.name)")
                     }
                 }
             }

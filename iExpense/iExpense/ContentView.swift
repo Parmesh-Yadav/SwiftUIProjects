@@ -67,6 +67,9 @@ struct ContentView: View {
                         Spacer()
                         Text(item.amount, format: .currency(code: item.currency))
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(item.name), \(item.amount.formatted(.currency(code: item.currency)))")
+                    .accessibilityHint("Expense type: \(item.type)")
                 }
                 .onDelete(perform: removeItems)
             }
