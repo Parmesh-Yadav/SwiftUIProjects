@@ -39,12 +39,12 @@ final class DataController: ObservableObject {
         return docs.appendingPathComponent(fileName)
     }
     
-    func add(name: String, imageData: Data) throws {
+    func add(name: String, imageData: Data, latitude: Double? = nil, longitude: Double? = nil) throws {
         let uuid = UUID().uuidString
         let imageFileName = "\(uuid).jpg"
         let imageURL = imageFileURL(for: imageFileName)
         try imageData.write(to: imageURL, options: .atomic)
-        let item = PersonPhoto(name: name, imageFilename: imageFileName, createdAt: Date.now)
+        let item = PersonPhoto(name: name, imageFilename: imageFileName, createdAt: Date.now, latitude: latitude, longitude: longitude)
         items.append(item)
         try save()
     }

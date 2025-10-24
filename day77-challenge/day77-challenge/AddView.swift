@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import CoreLocation
 
 struct AddView: View {
     @Environment(\.dismiss) var dismiss
@@ -17,6 +18,8 @@ struct AddView: View {
     @State private var uiImage: UIImage?
     @State private var name: String = ""
     @State private var savingError: String?
+    
+    let locationFetcher = LocationFetcher()
     
     var body: some View {
         NavigationView {
@@ -68,6 +71,9 @@ struct AddView: View {
                         .disabled(imageData == nil || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+            .onAppear {
+                locationFetcher.start()
+            }
         }
     }
     
@@ -101,9 +107,11 @@ struct AddView: View {
         }
         
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let location = locationFetcher.lastKnownLocation
+        
         Task {
             do {
-                try data.add(name: trimmedName, imageData: imageData)
+                try data.add(name: trimmedName, imageData: imageData, latitude: location?.latitude, longitude: location?.longitude)
                 await MainActor.run {
                     dismiss()
                 }
