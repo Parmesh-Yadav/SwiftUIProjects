@@ -5,33 +5,20 @@
 //  Created by Parmesh Yadav on 26/10/25.
 //
 
+import SamplePackage
 import SwiftUI
 
 struct ContentView: View {
-    @State private var backgroundColor = Color.red
+    let possibleNumbers = Array(1...60)
+    
+    var results: String {
+        let selected = possibleNumbers.random(7).sorted()
+        let strings = selected.map(String.init)
+        return strings.formatted()
+    }
     
     var body: some View {
-        VStack {
-            Text("Hello World")
-                .padding()
-                .background(backgroundColor)
-            
-            Text("Change Color")
-                .padding()
-                .contextMenu {
-                    Button("Red", role: .destructive) {
-                        backgroundColor = .red
-                    }
-                    
-                    Button("Green") {
-                        backgroundColor = .green
-                    }
-                    
-                    Button("Blue") {
-                        backgroundColor = .blue
-                    }
-                }
-        }
+        Text(results)
     }
 
 }
