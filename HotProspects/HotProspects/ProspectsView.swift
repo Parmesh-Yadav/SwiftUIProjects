@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import CodeScanner
 internal import AVFoundation
+import UserNotifications
 
 struct ProspectsView: View {
     @Environment(\.modelContext) var modelContext
@@ -58,31 +59,51 @@ struct ProspectsView: View {
                             prospect.isContacted.toggle()
                         }
                         .tint(.green)
+                        
+                        Button("Remind Me", systemImage: "bell") {
+                            addNotification(for: prospect)
+                        }
+                        .tint(.orange)
                     }
                 }
                 .tag(prospect)
             }
-                .navigationTitle(title)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Scan", systemImage: "qrcode.viewfinder") {
-                            isShowingScanner = true
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .topBarLeading) {
-                        EditButton()
-                    }
-                    
-                    if selectedProspects.isEmpty == false {
-                        ToolbarItem(placement: .principal) {
-                            Button("Delete Selected", action: delete)
-                        }
+            .navigationTitle(title)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Scan", systemImage: "qrcode.viewfinder") {
+                        isShowingScanner = true
                     }
                 }
-                .sheet(isPresented: $isShowingScanner) {
-                    CodeScannerView(codeTypes: [.qr], simulatedData: "Parmesh Yadav\nparmesh.bk@gmail.com", completion: handleScan)
+                
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
                 }
+            }
+            .overlay(alignment: .bottom) {
+                if selectedProspects.isEmpty == false {
+                    Button {
+                        delete()
+                    } label: {
+                        Label("Delete Selected", systemImage: "trash")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.red)
+                            .cornerRadius(12)
+                            .padding()
+                            .shadow(radius: 4)
+                    }
+                    // Lift above TabView
+                    .padding(.bottom, 10)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut, value: selectedProspects)
+                }
+            }
+            .sheet(isPresented: $isShowingScanner) {
+                CodeScannerView(codeTypes: [.qr], simulatedData: "Parmesh Yadav\nparmesh.bk@gmail.com", completion: handleScan)
+            }
         }
     }
     
@@ -115,6 +136,39 @@ struct ProspectsView: View {
     func delete() {
         for prospect in selectedProspects {
             modelContext.delete(prospect)
+        }
+    }
+    
+    func addNotification(for prospect: Prospect) {
+        let center = UNUserNotificationCenter.current()
+        
+        let addRequest = {
+            let content = UNMutableNotificationContent()
+            content.title = "Contact \(prospect.name)"
+            content.subtitle = prospect.email
+            content.sound = .default
+            
+            var dateComponents = DateComponents()
+            dateComponents.hour = 9
+            
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+            
+            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+            center.add(request)
+        }
+        
+        center.getNotificationSettings { setting in
+            if setting.authorizationStatus == .authorized {
+                addRequest()
+            } else {
+                center.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                    if success {
+                        addRequest()
+                    } else if let error {
+                        print(error.localizedDescription)
+                    }
+                }
+            }
         }
     }
 }
