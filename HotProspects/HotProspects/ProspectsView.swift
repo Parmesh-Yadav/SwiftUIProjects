@@ -8,14 +8,19 @@
 import SwiftUI
 import SwiftData
 import CodeScanner
-internal import AVFoundation
+import AVFoundation
 import UserNotifications
 
 struct ProspectsView: View {
+    enum SortType {
+        case name, date
+    }
+    
     @Environment(\.modelContext) var modelContext
-    @Query(sort: \Prospect.name) var prospects: [Prospect]
+    @Query var prospects: [Prospect]
     @State private var isShowingScanner = false
-    @State private var selectedProspects = Set<Prospect>()
+    @State private var selectedProspects = Set<UUID>()
+    @State private var sortType: SortType = .name
     
     enum FilterType {
         case none, contacted, uncontacted
@@ -34,15 +39,41 @@ struct ProspectsView: View {
         }
     }
     
+    // Avoid capturing local variables inside the predicate builder.
+    var filterPredicate: Predicate<Prospect>? {
+        switch filter {
+        case .none:
+            return nil
+        case .contacted:
+            return #Predicate { $0.isContacted == true }
+        case .uncontacted:
+            return #Predicate { $0.isContacted == false }
+        }
+    }
+
+    
     var body: some View {
         NavigationStack {
             List(prospects, selection: $selectedProspects) { prospect in
-                VStack(alignment: .leading) {
-                    Text(prospect.name)
-                        .font(.headline)
-                    
-                    Text(prospect.email)
-                        .foregroundStyle(.secondary)
+                NavigationLink {
+                    EditProspectsView(prospect: prospect)
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(prospect.name)
+                                .font(.headline)
+                            
+                            Text(prospect.email)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        if filter == .none {
+                            Image(systemName: prospect.isContacted ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundStyle(prospect.isContacted ? .green : .red)
+                        }
+                    }
                 }
                 .swipeActions {
                     Button("Delete", systemImage: "trash", role: .destructive) {
@@ -66,17 +97,37 @@ struct ProspectsView: View {
                         .tint(.orange)
                     }
                 }
-                .tag(prospect)
+                .tag(prospect.id)
             }
             .navigationTitle(title)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    Menu("Sort", systemImage: "arrow.up.arrow.down") {
+                        Button("Sort by Name") {
+                            sortType = .name
+                            _prospects = Query(
+                                filter: filterPredicate,
+                                sort: [SortDescriptor(\Prospect.name)]
+                            )
+                        }
+                                    
+                        Button("Sort by Most Recent") {
+                            sortType = .date
+                            _prospects = Query(
+                                filter: filterPredicate,
+                                sort: [SortDescriptor(\Prospect.dateAdded, order: .reverse)]
+                            )
+                        }
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Scan", systemImage: "qrcode.viewfinder") {
                         isShowingScanner = true
                     }
                 }
                 
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     EditButton()
                 }
             }
@@ -109,12 +160,21 @@ struct ProspectsView: View {
     
     init(filter: FilterType) {
         self.filter = filter
-        if filter != .none {
-            let showContactedOnly = filter == .contacted
-            _prospects = Query(filter: #Predicate {
-                $0.isContacted == showContactedOnly
-            }, sort: [SortDescriptor(\Prospect.name)])
+        
+        let predicate: Predicate<Prospect>?
+        switch filter {
+        case .none:
+            predicate = nil
+        case .contacted:
+            predicate = #Predicate { $0.isContacted == true }
+        case .uncontacted:
+            predicate = #Predicate { $0.isContacted == false }
         }
+        
+        _prospects = Query(
+            filter: predicate,
+            sort: [SortDescriptor(\Prospect.name)]
+        )
     }
     
     func handleScan(result: Result<ScanResult, ScanError>) {
@@ -129,14 +189,16 @@ struct ProspectsView: View {
             modelContext.insert(person)
             
         case .failure(let failure):
-            print("Scanning Faile: \(failure.localizedDescription)")
+            print("Scanning Failed: \(failure.localizedDescription)")
         }
     }
     
     func delete() {
-        for prospect in selectedProspects {
+        let toDelete = prospects.filter { selectedProspects.contains($0.id) }
+        for prospect in toDelete {
             modelContext.delete(prospect)
         }
+        selectedProspects.removeAll()
     }
     
     func addNotification(for prospect: Prospect) {
