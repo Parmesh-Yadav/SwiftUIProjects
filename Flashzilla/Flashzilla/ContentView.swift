@@ -7,24 +7,39 @@
 
 import SwiftUI
 
-func withOptionalAnimation<Result>(_ animation: Animation? = .default,_ body: () throws -> Result) rethrows -> Result {
-    if UIAccessibility.isReduceMotionEnabled {
-        return try body()
-    } else {
-        return try withAnimation(animation, body)
+extension View {
+    func stacked(at position: Int, in total: Int) -> some View {
+        let offset = Double(total - position)
+        return self.offset(y: offset * 10)
     }
 }
 
 struct ContentView: View {
-    @Environment(\.accessibilityReduceTransparency) var accessibilityReduceTransparency
-    @State private var scale = 1.0
+    @State private var cards = Array<Card>(repeating: .example, count: 10)
 
     var body: some View {
-        Text("Hello World")
-            .padding()
-            .background(accessibilityReduceTransparency ? .black : .black.opacity(0.5))
-            .foregroundStyle(.white)
-            .clipShape(.capsule)
+        ZStack {
+            Image(.background)
+                .resizable()
+                .ignoresSafeArea()
+            
+            VStack {
+                ZStack {
+                    ForEach(0..<cards.count, id: \.self) { index in
+                        CardView(card: cards[index]) {
+                            withAnimation {
+                                removeCard(at: index)
+                            }
+                        }
+                            .stacked(at: index, in: cards.count)
+                    }
+                }
+            }
+        }
+    }
+    
+    func removeCard(at index: Int) {
+        cards.remove(at: index)
     }
     
 }
