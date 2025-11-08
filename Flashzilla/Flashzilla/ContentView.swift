@@ -42,10 +42,10 @@ struct ContentView: View {
                     .clipShape(.capsule)
                 
                 ZStack {
-                    ForEach(0..<cards.count, id: \.self) { index in
-                        CardView(card: cards[index]) {
+                    ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                        CardView(card: card) { isCorrect in
                             withAnimation {
-                                removeCard(at: index)
+                                handleAnswer(card, isCorrect)
                             }
                         }
                         .stacked(at: index, in: cards.count)
@@ -91,7 +91,7 @@ struct ContentView: View {
                     HStack {
                         Button {
                             withAnimation {
-                                removeCard(at: cards.count - 1)
+                                removeCard(cards.last!)
                             }
                         } label: {
                             Image(systemName: "xmark.circle")
@@ -106,7 +106,7 @@ struct ContentView: View {
                         
                         Button {
                             withAnimation {
-                                removeCard(at: cards.count - 1)
+                                removeCard(cards.last!)
                             }
                         } label: {
                             Image(systemName: "checkmark.circle")
@@ -138,14 +138,16 @@ struct ContentView: View {
                 isActive = false
             }
         }
-        .sheet(isPresented: $showingEditScreen, onDismiss: resetCards, content: EditCards.init)
+        .sheet(isPresented: $showingEditScreen, onDismiss: resetCards, content: EditCardsView.init)
         .onAppear(perform: resetCards)
     }
     
-    func removeCard(at index: Int) {
-        guard index >= 0 else { return }
+    func removeCard(_ card: Card) {
+        guard let index = cards.firstIndex(where: { $0.id == card.id }) else { return }
         
         cards.remove(at: index)
+        cards.insert(card, at: 0)
+        
         if cards.isEmpty {
             isActive = false
         }
@@ -164,6 +166,22 @@ struct ContentView: View {
             }
         }
     }
+    
+    func handleAnswer(_ card: Card, _ isCorrect: Bool) {
+        if let index = cards.firstIndex(where: { $0.id == card.id }) {
+            cards.remove(at: index)
+        }
+
+        if !isCorrect {
+            // put back to try again
+            cards.insert(card, at: 0)
+        }
+
+        if cards.isEmpty {
+            isActive = false
+        }
+    }
+
     
 }
 

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct EditCards: View {
+struct EditCardsView: View {
     @Environment(\.dismiss) var dismiss
     @State private var cards = [Card]()
     @State private var newPrompt = ""
@@ -54,6 +54,9 @@ struct EditCards: View {
         let card = Card(prompt: trimmedPrompt, answer: trimmedAnswer)
         cards.insert(card, at: 0)
         saveData()
+        
+        newPrompt = ""
+        newAnswer = ""
     }
     
     func removeCards(at offsets: IndexSet) {
@@ -81,5 +84,5 @@ struct EditCards: View {
 }
 
 #Preview {
-    EditCards()
+    EditCardsView()
 }
