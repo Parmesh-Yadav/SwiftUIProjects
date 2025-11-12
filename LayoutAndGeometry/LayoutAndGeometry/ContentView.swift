@@ -9,31 +9,36 @@ import SwiftUI
 
 
 struct ContentView: View {
-    let colors: [Color] = [.red, .green, .blue, .orange, .pink, .purple, .yellow]
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(1..<20) { number in
-                    
-                    Text("Number \(number)")
-                        .font(.largeTitle)
-                        .padding()
-                        .background(.red)
-                        .frame(width: 200, height: 200)
-                        .visualEffect { content, proxy in
-                            content
-                                .rotation3DEffect(
-                                    .degrees(-proxy.frame(in: .global).minX / 8),
-                                    axis: (x:0, y:1, z:0)
-                                )
-                        }
 
+    var body: some View {
+        GeometryReader { fullView in
+            ScrollView(.vertical) {
+                ForEach(0..<50) { index in
+                    GeometryReader { proxy in
+                        Text("Row #\(index)")
+                            .font(.title)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                Color(
+                                    hue: Double(proxy.frame(in: .global).minY / fullView.size.height),
+                                    saturation: 0.8,
+                                    brightness: 0.9
+                                )
+                            )
+                            .rotation3DEffect(.degrees(proxy.frame(in: .global).minY - fullView.size.height / 2) / 5, axis: (x: 0, y: 1, z: 0))
+                            .opacity(
+                                (proxy.frame(in: .global).minY > 200)
+                                ? 1
+                                : proxy.frame(in: .global).minY / 200
+                            )
+                            .scaleEffect(
+                                max(0.5, proxy.frame(in: .global).minY / fullView.size.height)
+                            )
+                    }
+                    .frame(height: 40)
                 }
             }
-            .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.viewAligned)
     }
 }
 
