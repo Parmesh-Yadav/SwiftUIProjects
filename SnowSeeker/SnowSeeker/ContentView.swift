@@ -8,17 +8,31 @@
 import SwiftUI
 
 struct ContentView: View {
+    enum SortType: String, CaseIterable {
+        case `default` = "Default"
+        case alphabetical = "Alphabetical"
+        case country = "Country"
+    }
+    
     @State private var searchText = ""
     @State private var favorites = Favorites()
+    @State private var sortType: SortType = .default
     
     let resorts: [Resort] = Bundle.main.decode("resorts.json")
     
     var filteredResorts: [Resort] {
-        if searchText.isEmpty {
-            resorts
-        } else {
-            resorts.filter { $0.name.localizedStandardContains(searchText) }
+        var result = searchText.isEmpty ? resorts : resorts.filter{$0.name.localizedStandardContains(searchText)}
+        
+        switch sortType {
+        case .default:
+            break
+        case .alphabetical:
+            result.sort{$0.name < $1.name}
+        case .country:
+            result.sort{$0.country < $1.country}
         }
+        
+        return result
     }
     
     var body: some View {
@@ -59,6 +73,28 @@ struct ContentView: View {
                 ResortView(resort: resort)
             }
             .searchable(text: $searchText, prompt: "Search for a resort")
+            .toolbar {
+                ToolbarItem {
+                    Menu {
+                        ForEach(SortType.allCases, id:\.self) { type in
+                            Button {
+                                sortType = type
+                            } label: {
+                                HStack {
+                                    Text(type.rawValue)
+                                    
+                                    if sortType == type {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                                .foregroundStyle(sortType == type ? .blue : .primary)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                }
+            }
         } detail: {
             WelcomeView()
         }
